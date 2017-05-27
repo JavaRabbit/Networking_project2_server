@@ -88,6 +88,8 @@ int main(int argc, char * argv[]){
         fprintf(stderr, "error on accept\n");
         exit(1);
       }
+
+      printf("got a new connection from \n");
     } // end while loop
   } // end while loop
 
