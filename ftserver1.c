@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <netdb.h>
-
+#include <dirent.h>
 
 
 /* method prototypes */
@@ -108,6 +108,34 @@ int main(int argc, char * argv[]){
 
       // temp print out command to verify
       printf("The command is: %s\n", clientCommand);
+
+      // File pointer
+      FILE *file;
+      char bufferForFile[100000];
+      file = fopen("someFile.txt", "r");
+      fscanf(file, "%s", bufferForFile);
+      int n = write(connection_fd, bufferForFile, 100000);
+      printf("The return val n is %d\n", n);
+
+      //  write for -l all the files in this folder
+      char bufferForFileNames[100000] = {};
+      
+      // get every file name in this folder and append
+      DIR *dir;
+      struct dirent *sd;
+
+      DIR *d;
+      struct dirent *dirr;
+      d = opendir(".");
+      if(d){
+        while((sd = readdir(d)) != NULL){
+          char fileName[1000];
+          strcpy(fileName, sd->d_name);
+          printf("file name is %s\n", fileName);
+        }  // end while
+      } // end if
+
+      closedir(d);
 
     } // end while loop
   } // end while loop
