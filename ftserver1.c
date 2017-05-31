@@ -114,7 +114,19 @@ int main(int argc, char * argv[]){
       char bufferForFile[100000];
       file = fopen("someFile.txt", "r");
       fscanf(file, "%s", bufferForFile);
-      // int n = write(connection_fd, bufferForFile, 100000);
+      int pp;
+      char fileBuffer[512] = {};
+      
+      while((pp = fread(fileBuffer, sizeof(char), 512, file)) > 0){
+        //printf("hello\n");
+        if(send(connection_fd, fileBuffer, pp, 0) < 0){
+
+          printf("error sending\n");
+        } // end if
+      }
+
+  
+      //int n = write(connection_fd, bufferForFile, 100000);
       // printf("The return val n is %d\n", n);
 
       //  write for -l all the files in this folder
@@ -139,7 +151,8 @@ int main(int argc, char * argv[]){
         }  // end while
       } // end if
 
-      write(connection_fd, bufferForFileNames, strlen(bufferForFileNames));      
+      // write file names to the client
+      //write(connection_fd, bufferForFileNames, strlen(bufferForFileNames));      
 
       closedir(d);
 
