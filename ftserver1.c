@@ -81,6 +81,10 @@ int main(int argc, char * argv[]){
 
     client = sizeof(client_addr);
 
+
+    // variables to hold string from Client
+    char clientCommand[500] = {};
+
     while(1){
       connection_fd = accept(sock_fd, (struct sockaddr *) &client_addr, &client);
 
@@ -89,7 +93,22 @@ int main(int argc, char * argv[]){
         exit(1);
       }
 
-      printf("got a new connection from \n");
+
+
+      //printf("got a new connection from \n");
+
+
+      // wait to receive client command, change from sock_fd to connection
+      recv(connection_fd, clientCommand, 500,10);
+   
+
+      if(strlen(clientCommand) ==0){
+        printf("got nothing from client\n");
+      }
+
+      // temp print out command to verify
+      printf("The command is: %s\n", clientCommand);
+
     } // end while loop
   } // end while loop
 
