@@ -114,12 +114,13 @@ int main(int argc, char * argv[]){
       char bufferForFile[100000];
       file = fopen("someFile.txt", "r");
       fscanf(file, "%s", bufferForFile);
-      int n = write(connection_fd, bufferForFile, 100000);
-      printf("The return val n is %d\n", n);
+      // int n = write(connection_fd, bufferForFile, 100000);
+      // printf("The return val n is %d\n", n);
 
       //  write for -l all the files in this folder
       char bufferForFileNames[100000] = {};
-      
+      bufferForFileNames[0] = '\0';
+
       // get every file name in this folder and append
       DIR *dir;
       struct dirent *sd;
@@ -132,8 +133,13 @@ int main(int argc, char * argv[]){
           char fileName[1000];
           strcpy(fileName, sd->d_name);
           printf("file name is %s\n", fileName);
+          // add each file name to the string
+          strcat(bufferForFileNames, fileName);
+          strcat(bufferForFileNames, "\n");
         }  // end while
       } // end if
+
+      write(connection_fd, bufferForFileNames, strlen(bufferForFileNames));      
 
       closedir(d);
 
