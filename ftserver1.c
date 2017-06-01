@@ -112,7 +112,7 @@ int main(int argc, char * argv[]){
       // File pointer
       FILE *file;
       char bufferForFile[100000];
-      file = fopen("someFile.txt", "r");
+      file = fopen("manls.txt", "r");
       fscanf(file, "%s", bufferForFile);
       int pp;
       char fileBuffer[512] = {};
