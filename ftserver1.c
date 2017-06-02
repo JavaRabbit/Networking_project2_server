@@ -124,9 +124,10 @@ int main(int argc, char * argv[]){
       }
  
       printf("The wanted file  is %s\n", words[4]);
-
-
-
+    
+      // if "-g" then send file to client
+ 
+      if(strcmp("-g", words[3]) == 0){
       // File pointer
       FILE *file;
       char bufferForFile[100000];
@@ -154,7 +155,10 @@ int main(int argc, char * argv[]){
          char errorBuffer[] = "not found";
          send(connection_fd, errorBuffer, sizeof errorBuffer, 0);
       }
-
+    
+      } // end if words[3]== "-g"
+ 
+      else { // this is for -l
 
       //int n = write(connection_fd, bufferForFile, 100000);
       // printf("The return val n is %d\n", n);
@@ -182,9 +186,11 @@ int main(int argc, char * argv[]){
       } // end if
 
       // write file names to the client
-      //write(connection_fd, bufferForFileNames, strlen(bufferForFileNames));      
+      write(connection_fd, bufferForFileNames, strlen(bufferForFileNames));      
 
       closedir(d);
+
+      }   // end of else for -l
 
     } // end while loop
   } // end while loop
