@@ -108,11 +108,32 @@ int main(int argc, char * argv[]){
 
       // temp print out command to verify
       printf("The command is: %s\n", clientCommand);
+      printf("The length of the command is %lu\n", strlen(clientCommand));
+
+      // Tokenize the command so we get the -l -g, somefile,
+      // there is no /n character sent from the client
+      char * words[512];
+      if(clientCommand != NULL){
+        int i = 0; //variable to tell where to put tokenized string
+        char *p = strtok(clientCommand, " ");
+        while( p != NULL){
+          // add string to word array and increment i
+          words[i++] = p;
+          p = strtok(NULL, " ");
+        }
+      }
+ 
+      printf("The scond word is %s\n", words[1]);
+
+
+
+
+
 
       // File pointer
       FILE *file;
       char bufferForFile[100000];
-      file = fopen("manls.txt", "r");
+      file = fopen("GitHubVS.sln", "r");
       fscanf(file, "%s", bufferForFile);
       int pp;
       char fileBuffer[512] = {};
