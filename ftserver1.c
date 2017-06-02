@@ -123,7 +123,7 @@ int main(int argc, char * argv[]){
         }
       }
  
-      printf("The scond word is %s\n", words[1]);
+      printf("The wanted file  is %s\n", words[4]);
 
 
 
