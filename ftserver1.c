@@ -127,26 +127,35 @@ int main(int argc, char * argv[]){
 
 
 
-
-
-
       // File pointer
       FILE *file;
       char bufferForFile[100000];
-      file = fopen("GitHubVS.sln", "r");
-      fscanf(file, "%s", bufferForFile);
-      int pp;
-      char fileBuffer[512] = {};
       
-      while((pp = fread(fileBuffer, sizeof(char), 512, file)) > 0){
-        //printf("hello\n");
-        if(send(connection_fd, fileBuffer, pp, 0) < 0){
 
-          printf("error sending\n");
-        } // end if
+      // If the file exists, send to the client
+      if(file = fopen(words[4], "r")){
+        fscanf(file, "%s", bufferForFile);
+        int pp;
+        char fileBuffer[512] = {};
+     
+        while((pp = fread(fileBuffer, sizeof(char), 512, file)) > 0){
+          //printf("hello\n");
+          if(send(connection_fd, fileBuffer, pp, 0) < 0){
+
+            printf("error sending\n");
+          } // end if
+        }
+      } // end if file = fopen
+  
+      else {
+         // This else handles if the file is not found
+         // In this case, send to the server "not found"
+         printf("could not open file\n");
+         char errorBuffer[] = "not found";
+         send(connection_fd, errorBuffer, sizeof errorBuffer, 0);
       }
 
-  
+
       //int n = write(connection_fd, bufferForFile, 100000);
       // printf("The return val n is %d\n", n);
 
