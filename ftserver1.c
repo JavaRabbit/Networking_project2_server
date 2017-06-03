@@ -137,7 +137,7 @@ int main(int argc, char * argv[]){
       if(file = fopen(words[4], "r")){
         //fscanf(file, "%s", bufferForFile);
         int pp;
-        char fileBuffer[512] = {};
+        char fileBuffer[1024] = {};
      
         // send the size of the file first
         struct stat st;
@@ -151,14 +151,14 @@ int main(int argc, char * argv[]){
         //printf("The size of size of is %d\n", sizeof(fileSize));
    
         // write the size of the file to the client
-        //write(connection_fd, &fileSize,4); // int size is 4
-        send(connection_fd, &fileSize, sizeof fileSize, 0); 
+        write(connection_fd, &fileSize,4); // int size is 4
+        //send(connection_fd, &fileSize, sizeof fileSize, 0); 
 
         // get an ok, got file size from client
         char  ok[24] = {};
         recv(connection_fd, ok, 24,0); // get ok from client 
-
-        while((pp = fread(fileBuffer, sizeof(char), 512, file)) > 0){
+     
+        while((pp = fread(fileBuffer, sizeof(char), 1024, file)) > 0){
           //printf("hello\n");
           if(send(connection_fd, fileBuffer, pp, 0) < 0){
 
@@ -170,9 +170,11 @@ int main(int argc, char * argv[]){
       else {
          // This else handles if the file is not found
          // In this case, send to the server "not found"
-         printf("could not open file\n");
+         printf("\nFile not found. Sending error message to flip...\n");
          char errorBuffer[] = "not found";
-         send(connection_fd, errorBuffer, sizeof errorBuffer, 0);
+         
+         int notFound = -5;
+         write(connection_fd, &notFound,4);
       }
     
       } // end if words[3]== "-g"
