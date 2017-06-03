@@ -135,7 +135,7 @@ int main(int argc, char * argv[]){
 
       // If the file exists, send to the client
       if(file = fopen(words[4], "r")){
-        fscanf(file, "%s", bufferForFile);
+        //fscanf(file, "%s", bufferForFile);
         int pp;
         char fileBuffer[512] = {};
      
