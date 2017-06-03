@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <netdb.h>
 #include <dirent.h>
-
+#include <sys/stat.h>
 
 /* method prototypes */
 void validateParameters(int, char* []);
@@ -130,7 +130,7 @@ int main(int argc, char * argv[]){
       if(strcmp("-g", words[3]) == 0){
       // File pointer
       FILE *file;
-      char bufferForFile[100000];
+      //char bufferForFile[100000];
       
 
       // If the file exists, send to the client
@@ -139,6 +139,25 @@ int main(int argc, char * argv[]){
         int pp;
         char fileBuffer[512] = {};
      
+        // send the size of the file first
+        struct stat st;
+        if(stat(words[4], &st) != 0){
+
+        }
+  
+        //int fileSize = 99;
+        int fileSize = st.st_size;
+        //printf("The size is %d\n", st.st_size);
+        //printf("The size of size of is %d\n", sizeof(fileSize));
+   
+        // write the size of the file to the client
+        //write(connection_fd, &fileSize,4); // int size is 4
+        send(connection_fd, &fileSize, sizeof fileSize, 0); 
+
+        // get an ok, got file size from client
+        char  ok[24] = {};
+        recv(connection_fd, ok, 24,0); // get ok from client 
+
         while((pp = fread(fileBuffer, sizeof(char), 512, file)) > 0){
           //printf("hello\n");
           if(send(connection_fd, fileBuffer, pp, 0) < 0){
