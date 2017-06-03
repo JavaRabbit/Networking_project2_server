@@ -141,7 +141,11 @@ int main(int argc, char * argv[]){
      
         // send the size of the file first
         struct stat st;
+        if(stat(words[4], &st) != 0){
 
+        }
+
+        //int fileSize = 99;
         int fileSize = st.st_size;
         //printf("The size is %d\n", st.st_size);
         //printf("The size of size of is %d\n", sizeof(fileSize));
