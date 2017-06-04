@@ -9,12 +9,14 @@
 #include <netdb.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <signal.h>
+#include <fcntl.h>
 
 /* method prototypes */
 void validateParameters(int, char* []);
 void sendFile(char *[], int, char* []);
 void showFiles(char *[], int, char* []);
-
+void sig_handler(int signo);
 
 /* Function to validate that user 
  * entered valid port number.
@@ -33,14 +35,18 @@ void validateParameters(int argc, char *argv[]){
   }
 }
 
-
+int sock_fd; // making it a global
 
 int main(int argc, char * argv[]){
+  
+  // register handler
+  signal(SIGINT, sig_handler);
 
+  // call function to validate parameters
   validateParameters(argc, argv);
 
-  // file descriptors to be used
-  int sock_fd, connection_fd, datasock_fd, dataConnection_fd, client, dataClient;
+  // file descriptors to be used (sock_fd was here)
+  int  connection_fd, datasock_fd, dataConnection_fd, client, dataClient;
 
   // struct to hold IP address and port numbers
   struct sockaddr_in server, dataServer,  client_addr, dataClient_addr;
@@ -95,8 +101,7 @@ int main(int argc, char * argv[]){
     }
 
 
-    // Tokenize the command so we get the -l -g, somefile,
-    // there is no /n character sent from the client
+    // Tokenize the command so we get command in array form
     char * words[512];
     if(clientCommand != NULL){
       int i = 0; //variable to tell where to put tokenized string
@@ -108,7 +113,6 @@ int main(int argc, char * argv[]){
       } 
     } // end if
 
-    //  Here the command is tokenized
 
     // If user wanted -g, check if File exists first  
     // since we need to use the first socket to 
@@ -133,6 +137,8 @@ int main(int argc, char * argv[]){
         sendFile(words, argc, argv);
         continue; 
       } else {
+        // If file was not found, send a bogus negative value
+        // to client. 
         int notFound = -5;
         write(connection_fd, &notFound, 4);
       }
@@ -253,4 +259,9 @@ void showFiles(char * words[],int argc, char *argv[]){
 
 }  // end showFiles
 
-
+/* Handler function to handle control c */
+void sig_handler(int signo){
+  printf("\nYou are now closing server. Goodbye.\n");
+  close(sock_fd);
+  exit(0);
+}
