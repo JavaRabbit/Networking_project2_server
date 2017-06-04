@@ -205,7 +205,10 @@ void sendFile(char *words[], int argc,char *argv[]){
         return;
 }  // end of sendFile()
 
-
+/* This function will be called by main() if user
+ * asked for "-l" to display list of files.
+ * Function creates a new socket for data transfer
+ */
 
 void showFiles(char * words[],int argc, char *argv[]){
 
@@ -216,29 +219,46 @@ void showFiles(char * words[],int argc, char *argv[]){
       struct sockaddr_in dataServer, dataClient_addr;
       int dataPortNumber;
 
+      // call to socket() function
       if((datasock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
         perror("datasocket error\n");
       }
+    
+      // set all values in buffer to 0
       bzero(&dataServer, sizeof(dataServer));
       dataServer.sin_family = AF_INET;
-      dataPortNumber = atoi(words[4]);  // 4 for -l
-      dataServer.sin_port = htons(dataPortNumber); ///FIXXXXXXX
+
+      // set dataPortNumber to the 5th element in command array
+      dataPortNumber = atoi(words[4]); 
+
+      // Set struct dataServer port number
+      dataServer.sin_port = htons(dataPortNumber); 
+
+      // Allow any IP to bind
       dataServer.sin_addr.s_addr = htons(INADDR_ANY);
+      
+      // bind host address using bind()
       bind(datasock_fd, (struct sockaddr *) &dataServer, sizeof(dataServer));
+      
+      // listen for incoming connections. Allow up to 5
       listen(datasock_fd, 5);
-      printf("waiting for data connection for -l ...\n");
+      printf("\nWaiting for data connection for -l ...\n");
+       
+      // Accept connection from client
       dataConnection_fd = accept(datasock_fd, (struct sockaddr *) &dataClient_addr, &dataClient);
 
-      //  write for -l all the files in this folder
+      //  string variable to hold file names
       char bufferForFileNames[100000] = {};
       bufferForFileNames[0] = '\0';
 
       // get every file name in this folder and append
-      DIR *dir;
+      //DIR *dir;
       struct dirent *sd;
 
       DIR *d;
-      struct dirent *dirr;
+      //struct dirent *dirr;
+
+      // open current file directectory stream
       d = opendir(".");
       if(d){
         while((sd = readdir(d)) != NULL){
