@@ -78,15 +78,16 @@ int main(int argc, char * argv[]){
   while(1){
     // start to listen, 
     listen(sock_fd,5);
-    printf("Listening for a new connection...\n");
+    printf("\nListening for a new connection...\n");
 
     client = sizeof(client_addr);
 
     // variables to hold string from Client
     char clientCommand[500] = {};
     
-    printf("\nAt top of while loop B\n");
+    // Accept connection from client. Write prompt to console
     connection_fd = accept(sock_fd, (struct sockaddr *) &client_addr, &client);
+    printf("\nConnection from... \n");
 
     if(connection_fd < 0){
       fprintf(stderr, "error on accept\n");
@@ -100,7 +101,6 @@ int main(int argc, char * argv[]){
       printf("got nothing from client\n");
     }
 
-
     // Tokenize the command so we get command in array form
     char * words[512];
     if(clientCommand != NULL){
@@ -113,12 +113,15 @@ int main(int argc, char * argv[]){
       } 
     } // end if
 
-
     // If user wanted -g, check if File exists first  
     // since we need to use the first socket to 
     // tell the user that file does not exist
     if(strcmp("-g", words[3]) == 0){
       FILE *file;
+  
+      // Print prompt to user
+      printf("\nFile %s requested on port %s\n", words[4], words[5]);
+
       // if the file exists, go to sendFile()
       // otherwise, tell client file does not exist
       file = fopen(words[4], "r");
@@ -127,23 +130,27 @@ int main(int argc, char * argv[]){
         
         struct stat st;
         stat(words[4], &st);
+
+        // write the fileSize to the client
         int fileSize = st.st_size;
         write(connection_fd, &fileSize, 4);
 
         // receive ok from the client
         char ok[24] = {};
         recv(connection_fd, ok, 24, 0);
+
         //  call sendFile function to start sending file
         sendFile(words, argc, argv);
         continue; 
       } else {
         // If file was not found, send a bogus negative value
-        // to client. 
+        // to client. Integer is 4 bytes 
         int notFound = -5;
         write(connection_fd, &notFound, 4);
+        printf("\nFile not found. Sending error message to %s : %s \n", words[1], words[2]);
       }
     }  else {
-     // else user entered -l
+     // Client entered "-l", call showFiles() function
      showFiles(words,argc, argv);
 
     }
@@ -170,46 +177,57 @@ void sendFile(char *words[], int argc,char *argv[]){
 
       // If the file exists, send to the client
       int pp;
+      // String variable to hold buffer
       char fileBuffer[1024] = {};
      
-        // write the data on a separate port
-        // the port will be words[5], remember that we need to 
-        // change string to int
-        // Basically, listen for the data connection
-        //
-        if((datasock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
-          perror("data socket error\n");
-        }
-        // clear socket
-        bzero(&dataServer, sizeof(dataServer));
-        dataServer.sin_family = AF_INET;
-        dataPortNumber = atoi(words[5]);
-        dataServer.sin_port = htons(dataPortNumber);     //// fix!
-        dataServer.sin_addr.s_addr = htons(INADDR_ANY);
-        bind(datasock_fd, (struct sockaddr *) &dataServer, sizeof(dataServer));
-        listen(datasock_fd, 5);
-        printf("The data port number is %d\n", dataPortNumber); 
-        printf("\nNow waiting for data connection...\n");
-        dataConnection_fd = accept(datasock_fd, (struct sockaddr *) &dataClient_addr, &dataClient);
+      // write the data on a separate port
+      // the data port will be int( words[5])
+      // Basically, listen for the data connection
+        
+
+      if((datasock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+        perror("data socket error\n");
+      }
+      // clear socket
+      bzero(&dataServer, sizeof(dataServer));
+      dataServer.sin_family = AF_INET;
+
+      // set data port number
+      dataPortNumber = atoi(words[5]);
+      dataServer.sin_port = htons(dataPortNumber);    
+
+      // Allow any IP to connect
+      dataServer.sin_addr.s_addr = htons(INADDR_ANY);
+
+      // call to bind()
+      bind(datasock_fd, (struct sockaddr *) &dataServer, sizeof(dataServer));
+
+      // Listen for connection, allow up to 5
+      listen(datasock_fd, 5);
+
+      // Accept the connection
+      dataConnection_fd = accept(datasock_fd, (struct sockaddr *) &dataClient_addr, &dataClient);
      
-        while((pp = fread(fileBuffer, sizeof(char), 1024, file)) > 0){
-          if(send(dataConnection_fd, fileBuffer, pp, 0) < 0){
+      // use while loop to continue sending buffer size of 1024 
+      // until entire file is read
+      while((pp = fread(fileBuffer, sizeof(char), 1024, file)) > 0){
+        if(send(dataConnection_fd, fileBuffer, pp, 0) < 0){
 
-            printf("error sending\n");
-          } // end if
-        }
-        close(dataConnection_fd);
+          printf("error sending\n");
+        } // end if
+      }
+      close(dataConnection_fd);
 
-        // Print confirmation to console
-        printf("Completed sending file: %s on port: %s\n", words[4], words[5]);
-        return;
+      // Print confirmation to console
+      printf("Completed sending file: %s on port: %s\n", words[4], words[5]);
+      return;
 }  // end of sendFile()
+
 
 /* This function will be called by main() if user
  * asked for "-l" to display list of files.
  * Function creates a new socket for data transfer
  */
-
 void showFiles(char * words[],int argc, char *argv[]){
 
       printf("\nList directory requested on port %s\n", words[4]);
@@ -242,7 +260,6 @@ void showFiles(char * words[],int argc, char *argv[]){
       
       // listen for incoming connections. Allow up to 5
       listen(datasock_fd, 5);
-      printf("\nWaiting for data connection for -l ...\n");
        
       // Accept connection from client
       dataConnection_fd = accept(datasock_fd, (struct sockaddr *) &dataClient_addr, &dataClient);
@@ -258,7 +275,10 @@ void showFiles(char * words[],int argc, char *argv[]){
       DIR *d;
       //struct dirent *dirr;
 
-      // open current file directectory stream
+      /* open current file directory stream
+       * use while loop to iterate and append
+       * each file name to string
+       */
       d = opendir(".");
       if(d){
         while((sd = readdir(d)) != NULL){
@@ -275,7 +295,6 @@ void showFiles(char * words[],int argc, char *argv[]){
 
       printf("Completed sending directory contents on port %s\n", words[4]);
       closedir(d);
-
 
 }  // end showFiles
 
