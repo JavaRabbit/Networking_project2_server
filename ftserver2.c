@@ -40,16 +40,16 @@ void validateParameters(int argc, char *argv[]){
 
 int main(int argc, char * argv[]){
 
-  printf("Hello\n");
+  //printf("Hello\n");
   validateParameters(argc, argv);
-  printf("After validate params\n");
+  //printf("After validate params\n");
 
   // file descriptors to be used
-  int sock_fd, connection_fd, client;
+  int sock_fd, connection_fd, datasock_fd, dataConnection_fd, client, dataClient;
 
   // struct to hold IP address and port numbers
-  struct sockaddr_in server, client_addr;
-  int portNumber;
+  struct sockaddr_in server, dataServer,  client_addr, dataClient_addr;
+  int portNumber, dataPortNumber;
 
   // assign port number to argv[1]
   portNumber = atoi(argv[1]);
@@ -157,10 +157,31 @@ int main(int argc, char * argv[]){
         // get an ok, got file size from client
         char  ok[24] = {};
         recv(connection_fd, ok, 24,0); // get ok from client 
+
+        // write the data on a separate port
+        // the port will be words[5], remember that we need to 
+        // change string to int
+        // Basically, listen for the data connection
+        //
+        if((datasock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+          perror("data socket error\n");
+        }
+        // clear socket
+        bzero(&dataServer, sizeof(dataServer));
+        dataServer.sin_family = AF_INET;
+        dataPortNumber = atoi(argv[5]);
+        dataServer.sin_port = htons(9092);     //// fix!
+        dataServer.sin_addr.s_addr = htons(INADDR_ANY);
+        bind(datasock_fd, (struct sockaddr *) &dataServer, sizeof(dataServer));
+        listen(datasock_fd, 5);
+        printf("The data port number is %d\n", dataPortNumber); 
+        printf("\nNow waiting for data connection...\n");
+        dataConnection_fd = accept(datasock_fd, (struct sockaddr *) &dataClient_addr, &dataClient);
+        
      
         while((pp = fread(fileBuffer, sizeof(char), 1024, file)) > 0){
           //printf("hello\n");
-          if(send(connection_fd, fileBuffer, pp, 0) < 0){
+          if(send(dataConnection_fd, fileBuffer, pp, 0) < 0){
 
             printf("error sending\n");
           } // end if
@@ -171,12 +192,12 @@ int main(int argc, char * argv[]){
          // This else handles if the file is not found
          // In this case, send to the server "not found"
          printf("\nFile not found. Sending error message to flip...\n");
-         char errorBuffer[] = "not found";
          
          int notFound = -5;
-         write(connection_fd, &notFound,4);
+         write(dataConnection_fd, &notFound,4);
       }
-    
+       bzero(&dataServer, sizeof(dataServer));
+       //close(dataConnection_fd); // ???    
       } // end if words[3]== "-g"
  
       else { // this is for -l
@@ -212,7 +233,6 @@ int main(int argc, char * argv[]){
       closedir(d);
 
       }   // end of else for -l
-
     } // end while loop
   } // end while loop
 
