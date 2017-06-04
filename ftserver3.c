@@ -32,17 +32,9 @@ void validateParameters(int argc, char *argv[]){
 
 
 
-
-
-
-
-
-
 int main(int argc, char * argv[]){
 
-  //printf("Hello\n");
   validateParameters(argc, argv);
-  //printf("After validate params\n");
 
   // file descriptors to be used
   int sock_fd, connection_fd, datasock_fd, dataConnection_fd, client, dataClient;
@@ -81,58 +73,65 @@ int main(int argc, char * argv[]){
 
     client = sizeof(client_addr);
 
-
     // variables to hold string from Client
     char clientCommand[500] = {};
-
-    while(1){
-      printf("\nAt top of while loop B\n");
-      connection_fd = accept(sock_fd, (struct sockaddr *) &client_addr, &client);
-
-      if(connection_fd < 0){
-        fprintf(stderr, "error on accept\n");
-        exit(1);
-      }
-
-
-
-      //printf("got a new connection from \n");
-
-
-      // wait to receive client command, change from sock_fd to connection
-      recv(connection_fd, clientCommand, 500,10);
-   
-
-      if(strlen(clientCommand) ==0){
-        printf("got nothing from client\n");
-      }
-
-      // temp print out command to verify
-      printf("The command is: %s\n", clientCommand);
-      printf("The length of the command is %lu\n", strlen(clientCommand));
-
-      // Tokenize the command so we get the -l -g, somefile,
-      // there is no /n character sent from the client
-      char * words[512];
-      if(clientCommand != NULL){
-        int i = 0; //variable to tell where to put tokenized string
-        char *p = strtok(clientCommand, " ");
-        while( p != NULL){
-          // add string to word array and increment i
-          words[i++] = p;
-          p = strtok(NULL, " ");
-        }
-      }
- 
-      printf("The wanted file  is %s\n", words[4]);
     
-      // if "-g" then send file to client
- 
+    printf("\nAt top of while loop B\n");
+    connection_fd = accept(sock_fd, (struct sockaddr *) &client_addr, &client);
+
+    if(connection_fd < 0){
+      fprintf(stderr, "error on accept\n");
+      exit(1);
+    }
+
+    // wait to receive client command, change from sock_fd to connection
+    recv(connection_fd, clientCommand, 500,10);
+
+    if(strlen(clientCommand) ==0){
+      printf("got nothing from client\n");
+    }
+
+
+    // Tokenize the command so we get the -l -g, somefile,
+    // there is no /n character sent from the client
+    char * words[512];
+    if(clientCommand != NULL){
+      int i = 0; //variable to tell where to put tokenized string
+      char *p = strtok(clientCommand, " ");
+      while( p != NULL){
+        // add string to word array and increment i
+        words[i++] = p;
+        p = strtok(NULL, " ");
+      } 
+    } // end if
+
+    //  Here the command is tokenized
+
+    // If user wanted -g, check if File exists first  
+    // since we need to use the first socket to 
+    // tell the user that file does not exist
+    if(strcmp("-g", words[3]) == 0){
+      FILE *file;
+      // if the file exists, go to sendFile()
+      // otherwise, tell client file does not exist
+      file = fopen(words[4], "r");
+      if(file){
+        // sendFile(words);
+      } else {
+        int notFound = -5;
+        write(connection_fd, &notFound, 4);
+      }
+    } // end if
+    
+  } // end while
+}  // end main
+
+/*
+void sendFile(char *words[]) 
+    
       if(strcmp("-g", words[3]) == 0){
       // File pointer
       FILE *file;
-      //char bufferForFile[100000];
-      
 
       // If the file exists, send to the client
       if(file = fopen(words[4], "r")){
@@ -146,14 +145,10 @@ int main(int argc, char * argv[]){
 
         }
 
-        //int fileSize = 99;
         int fileSize = st.st_size;
-        //printf("The size is %d\n", st.st_size);
-        //printf("The size of size of is %d\n", sizeof(fileSize));
    
         // write the size of the file to the client
         write(connection_fd, &fileSize,4); // int size is 4
-        //send(connection_fd, &fileSize, sizeof fileSize, 0); 
 
         // get an ok, got file size from client
         char  ok[24] = {};
@@ -203,8 +198,6 @@ int main(int argc, char * argv[]){
  
       else { // this is for -l
 
-      //int n = write(connection_fd, bufferForFile, 100000);
-      // printf("The return val n is %d\n", n);
 
       //  write for -l all the files in this folder
       char bufferForFileNames[100000] = {};
@@ -238,3 +231,5 @@ int main(int argc, char * argv[]){
   } // end while loop
 
 }  // end main
+
+*/
