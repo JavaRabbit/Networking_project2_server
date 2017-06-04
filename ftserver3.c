@@ -13,7 +13,7 @@
 /* method prototypes */
 void validateParameters(int, char* []);
 void sendFile(char *[], int, char* []);
-void showFiles(int, char* []);
+void showFiles(char *[], int, char* []);
 
 
 /* Function to validate that user 
@@ -138,7 +138,7 @@ int main(int argc, char * argv[]){
       }
     }  else {
      // else user entered -l
-     showFiles(argc, argv);
+     showFiles(words,argc, argv);
 
     }
     
@@ -177,8 +177,8 @@ void sendFile(char *words[], int argc,char *argv[]){
         // clear socket
         bzero(&dataServer, sizeof(dataServer));
         dataServer.sin_family = AF_INET;
-        dataPortNumber = atoi(argv[5]);
-        dataServer.sin_port = htons(9092);     //// fix!
+        dataPortNumber = atoi(words[5]);
+        dataServer.sin_port = htons(dataPortNumber);     //// fix!
         dataServer.sin_addr.s_addr = htons(INADDR_ANY);
         bind(datasock_fd, (struct sockaddr *) &dataServer, sizeof(dataServer));
         listen(datasock_fd, 5);
@@ -198,7 +198,7 @@ void sendFile(char *words[], int argc,char *argv[]){
 
 
 
-void showFiles(int argc, char *argv[]){
+void showFiles(char * words[],int argc, char *argv[]){
 
       // variables for data socket
       int datasock_fd, dataConnection_fd, dataClient;
@@ -210,8 +210,8 @@ void showFiles(int argc, char *argv[]){
       }
       bzero(&dataServer, sizeof(dataServer));
       dataServer.sin_family = AF_INET;
-      dataPortNumber = atoi(argv[4]);  // 4 for -l
-      dataServer.sin_port = htons(9092); ///FIXXXXXXX
+      dataPortNumber = atoi(words[4]);  // 4 for -l
+      dataServer.sin_port = htons(dataPortNumber); ///FIXXXXXXX
       dataServer.sin_addr.s_addr = htons(INADDR_ANY);
       bind(datasock_fd, (struct sockaddr *) &dataServer, sizeof(dataServer));
       listen(datasock_fd, 5);
