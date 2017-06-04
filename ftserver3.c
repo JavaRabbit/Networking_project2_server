@@ -193,12 +193,17 @@ void sendFile(char *words[], int argc,char *argv[]){
           } // end if
         }
         close(dataConnection_fd);
+
+        // Print confirmation to console
+        printf("Completed sending file: %s on port: %s\n", words[4], words[5]);
         return;
 }  // end of sendFile()
 
 
 
 void showFiles(char * words[],int argc, char *argv[]){
+
+      printf("\nList directory requested on port %s\n", words[4]);
 
       // variables for data socket
       int datasock_fd, dataConnection_fd, dataClient;
@@ -233,7 +238,6 @@ void showFiles(char * words[],int argc, char *argv[]){
         while((sd = readdir(d)) != NULL){
           char fileName[1000];
           strcpy(fileName, sd->d_name);
-          printf("file name is %s\n", fileName);
           // add each file name to the string
           strcat(bufferForFileNames, fileName);
           strcat(bufferForFileNames, "\n");
@@ -243,6 +247,7 @@ void showFiles(char * words[],int argc, char *argv[]){
       // write file names to the client
       write(dataConnection_fd, bufferForFileNames, strlen(bufferForFileNames));      
 
+      printf("Completed sending directory contents on port %s\n", words[4]);
       closedir(d);
 
 
