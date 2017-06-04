@@ -12,6 +12,9 @@
 
 /* method prototypes */
 void validateParameters(int, char* []);
+void sendFile(char *[], int, char* []);
+void showFiles(int, char* []);
+
 
 /* Function to validate that user 
  * entered valid port number.
@@ -116,44 +119,53 @@ int main(int argc, char * argv[]){
       // otherwise, tell client file does not exist
       file = fopen(words[4], "r");
       if(file){
-        // sendFile(words);
+        // if file exists, send the file size to client
+        
+        struct stat st;
+        stat(words[4], &st);
+        int fileSize = st.st_size;
+        write(connection_fd, &fileSize, 4);
+
+        // receive ok from the client
+        char ok[24] = {};
+        recv(connection_fd, ok, 24, 0);
+        //  call sendFile function to start sending file
+        sendFile(words, argc, argv);
+        continue; 
       } else {
         int notFound = -5;
         write(connection_fd, &notFound, 4);
       }
-    } // end if
+    }  else {
+     // else user entered -l
+     showFiles(argc, argv);
+
+    }
     
   } // end while
 }  // end main
 
-/*
-void sendFile(char *words[]) 
+
+void sendFile(char *words[], int argc,char *argv[]){ 
     
-      if(strcmp("-g", words[3]) == 0){
       // File pointer
       FILE *file;
+      if( !(file = fopen(words[4], "r"))){
+        printf("Problem opening file\n");
+        return;
+      }
+
+      // variables for data socket
+      int datasock_fd, dataConnection_fd, dataClient;
+      struct sockaddr_in dataServer, dataClient_addr;
+      int dataPortNumber;
+
+
 
       // If the file exists, send to the client
-      if(file = fopen(words[4], "r")){
-        //fscanf(file, "%s", bufferForFile);
-        int pp;
-        char fileBuffer[1024] = {};
+      int pp;
+      char fileBuffer[1024] = {};
      
-        // send the size of the file first
-        struct stat st;
-        if(stat(words[4], &st) != 0){
-
-        }
-
-        int fileSize = st.st_size;
-   
-        // write the size of the file to the client
-        write(connection_fd, &fileSize,4); // int size is 4
-
-        // get an ok, got file size from client
-        char  ok[24] = {};
-        recv(connection_fd, ok, 24,0); // get ok from client 
-
         // write the data on a separate port
         // the port will be words[5], remember that we need to 
         // change string to int
@@ -173,31 +185,38 @@ void sendFile(char *words[])
         printf("The data port number is %d\n", dataPortNumber); 
         printf("\nNow waiting for data connection...\n");
         dataConnection_fd = accept(datasock_fd, (struct sockaddr *) &dataClient_addr, &dataClient);
-        
      
         while((pp = fread(fileBuffer, sizeof(char), 1024, file)) > 0){
-          //printf("hello\n");
           if(send(dataConnection_fd, fileBuffer, pp, 0) < 0){
 
             printf("error sending\n");
           } // end if
         }
-      } // end if file = fopen
-  
-      else {
-         // This else handles if the file is not found
-         // In this case, send to the server "not found"
-         printf("\nFile not found. Sending error message to flip...\n");
-         
-         int notFound = -5;
-         write(dataConnection_fd, &notFound,4);
-      }
-       bzero(&dataServer, sizeof(dataServer));
-       //close(dataConnection_fd); // ???    
-      } // end if words[3]== "-g"
- 
-      else { // this is for -l
+        close(dataConnection_fd);
+        return;
+}  // end of sendFile()
 
+
+
+void showFiles(int argc, char *argv[]){
+
+      // variables for data socket
+      int datasock_fd, dataConnection_fd, dataClient;
+      struct sockaddr_in dataServer, dataClient_addr;
+      int dataPortNumber;
+
+      if((datasock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+        perror("datasocket error\n");
+      }
+      bzero(&dataServer, sizeof(dataServer));
+      dataServer.sin_family = AF_INET;
+      dataPortNumber = atoi(argv[4]);  // 4 for -l
+      dataServer.sin_port = htons(9092); ///FIXXXXXXX
+      dataServer.sin_addr.s_addr = htons(INADDR_ANY);
+      bind(datasock_fd, (struct sockaddr *) &dataServer, sizeof(dataServer));
+      listen(datasock_fd, 5);
+      printf("waiting for data connection for -l ...\n");
+      dataConnection_fd = accept(datasock_fd, (struct sockaddr *) &dataClient_addr, &dataClient);
 
       //  write for -l all the files in this folder
       char bufferForFileNames[100000] = {};
@@ -222,14 +241,11 @@ void sendFile(char *words[])
       } // end if
 
       // write file names to the client
-      write(connection_fd, bufferForFileNames, strlen(bufferForFileNames));      
+      write(dataConnection_fd, bufferForFileNames, strlen(bufferForFileNames));      
 
       closedir(d);
 
-      }   // end of else for -l
-    } // end while loop
-  } // end while loop
 
-}  // end main
+}  // end showFiles
 
-*/
+
