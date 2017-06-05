@@ -87,8 +87,8 @@ int main(int argc, char * argv[]){
     
     // Accept connection from client. Write prompt to console
     connection_fd = accept(sock_fd, (struct sockaddr *) &client_addr, &client);
-    printf("\nConnection from... \n");
-
+    //printf("\nConnection from %d\n", ntohs(client_addr.sin_port));
+ 
     if(connection_fd < 0){
       fprintf(stderr, "error on accept\n");
       exit(1);
@@ -113,6 +113,7 @@ int main(int argc, char * argv[]){
       } 
     } // end if
 
+
     // If user wanted -g, check if File exists first  
     // since we need to use the first socket to 
     // tell the user that file does not exist
@@ -120,6 +121,7 @@ int main(int argc, char * argv[]){
       FILE *file;
   
       // Print prompt to user
+      printf("\nConnection from %s\n", words[6]);
       printf("\nFile %s requested on port %s\n", words[4], words[5]);
 
       // if the file exists, go to sendFile()
@@ -151,6 +153,11 @@ int main(int argc, char * argv[]){
       }
     }  else {
      // Client entered "-l", call showFiles() function
+     
+     // print connection to user
+     printf("\nConnection from %s\n", words[5]);
+
+     // call showFiles function
      showFiles(words,argc, argv);
 
     }
